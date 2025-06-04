@@ -1,6 +1,5 @@
 import pygame
 import random
-import time
 
 
 class Pickup:
@@ -12,7 +11,7 @@ class Pickup:
             "speed_up",
             "speed_down",
             "extra_shots",
-            "immortal"
+            "health"
             ])
         self.image = self.load_image(self.type)
         self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
@@ -26,8 +25,8 @@ class Pickup:
             surface.fill((255, 0, 0))  # Red for speed down
         elif pickup_type == "extra_shots":
             surface.fill((0, 0, 255))  # Blue for extra shots
-        elif pickup_type == "immortal":
-            surface.fill((255, 255, 0))  # Yellow for immortality
+        elif pickup_type == "health":
+            surface.fill((255, 0, 255))  # Purple for health
         return surface
 
     def move(self, speed):
@@ -51,6 +50,7 @@ class Pickup:
             player.speed -= 1
         elif self.type == "extra_shots":
             player.max_shots += 1
-        elif self.type == "immortal":
-            player.immortal_time = time.time() + 5  # Immortal for 5 seconds
-            player.is_immortal = True
+        elif self.type == "health":
+            player.health += 50
+            if player.health > 100:  # Ensure health doesn't exceed the maximum
+                player.health = 100

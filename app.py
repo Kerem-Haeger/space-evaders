@@ -27,7 +27,6 @@ ship = Spaceship(SHIP_WIDTH, SHIP_HEIGHT, SHIP_SPEED)
 asteroids = []
 lasers = []
 pickups = []
-player_health = 100
 # player_shots = max_shots
 laser_fired = False
 score = 0
@@ -77,9 +76,6 @@ while running:
     # Move the spaceship
     ship.move()
 
-    # Update player (for immortality effect)
-    ship.update()
-
     # Spawn new asteroids at random intervals
     if random.randint(1, 40) == 1:
         new_asteroid = Asteroid(random.randint(0, SCREEN_WIDTH - 40),
@@ -104,9 +100,9 @@ while running:
             score += 10  # Increase score by 10
 
         if asteroid.check_collision(ship.rect):
-            player_health -= 50  # Deduct health on collision
+            ship.health -= 50  # Deduct health on collision
             asteroids.remove(asteroid)  # Remove the asteroid after collision
-            if player_health <= 0:
+            if ship.health <= 0:
                 running = False  # End the game if health reaches 0
 
         # Check for laser-asteroid collision
@@ -138,7 +134,7 @@ while running:
 
     # Display the health and shots remaining
     font = pygame.font.SysFont("Arial", 15)
-    health_text = font.render(f"Health: {player_health}", True, WHITE)
+    health_text = font.render(f"Health: {ship.health}", True, WHITE)
     screen.blit(health_text, (10, 10))
 
     shots_text = font.render(f"Shots: {ship.max_shots}", True, WHITE)
