@@ -1,5 +1,6 @@
 import pygame
 import random
+from pickups import Pickup
 from player import Spaceship, Laser
 from asteroid import Asteroid
 from game_settings import (
@@ -8,7 +9,6 @@ from game_settings import (
     SHIP_WIDTH,
     SHIP_HEIGHT,
     SHIP_SPEED,
-    max_shots,
     PURPLE,
     WHITE
 )
@@ -26,8 +26,9 @@ ship = Spaceship(SHIP_WIDTH, SHIP_HEIGHT, SHIP_SPEED)
 # Create a list for asteroids and lasers
 asteroids = []
 lasers = []
+pickups = []
 player_health = 100
-player_shots = max_shots
+# player_shots = max_shots
 laser_fired = False
 
 # Star background setup
@@ -50,12 +51,12 @@ while running:
         if event.type == pygame.KEYDOWN:
             if (
                 event.key == pygame.K_SPACE
-                and player_shots > 0
+                and ship.max_shots > 0
                 and not laser_fired
             ):
                 laser = Laser(ship.x + SHIP_WIDTH // 2 - 2, ship.y)
                 lasers.append(laser)  # Add laser to the list
-                player_shots -= 1  # Decrease shots available
+                ship.max_shots -= 1  # Decrease shots available
                 laser_fired = True
 
             # Handle ESC key to quit the game
@@ -75,13 +76,21 @@ while running:
     # Move the spaceship
     ship.move()
 
+    # Update player (for immortality effect)
+    ship.update()
+
     # Spawn new asteroids at random intervals
-    if random.randint(1, 35) == 1:
+    if random.randint(1, 40) == 1:
         new_asteroid = Asteroid(random.randint(0, SCREEN_WIDTH - 40),
                                 -40,
                                 random.randint(2, 4)
                                 )
         asteroids.append(new_asteroid)
+
+    # Spawn new pickups at random intervals
+    if random.randint(1, 200) == 1:
+        new_pickup = Pickup(random.randint(0, SCREEN_WIDTH - 20), -20)
+        pickups.append(new_pickup)
 
     # Move and draw the asteroids
     for asteroid in asteroids[:]:
@@ -109,6 +118,15 @@ while running:
         if laser.y < 0:
             lasers.remove(laser)
 
+    # Move and draw the pickups
+    for pickup in pickups[:]:
+        pickup.move(2)  # Speed of falling pickups
+        pickup.draw(screen)
+
+        if pickup.check_collision(ship.rect):  # If pickup is collected
+            pickup.apply_effect(ship)  # Apply its effect to the player
+            pickups.remove(pickup)  # Remove the pickup after it's collected
+
     # Draw the spaceship
     screen.blit(ship.image, (ship.x, ship.y))
 
@@ -117,7 +135,7 @@ while running:
     health_text = font.render(f"Health: {player_health}", True, WHITE)
     screen.blit(health_text, (10, 10))
 
-    shots_text = font.render(f"Shots: {player_shots}", True, WHITE)
+    shots_text = font.render(f"Shots: {ship.max_shots}", True, WHITE)
     screen.blit(shots_text, (SCREEN_WIDTH - 100, 10))
 
     # Update the display

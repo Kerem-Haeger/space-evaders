@@ -1,4 +1,5 @@
 import pygame
+import time
 
 
 class Spaceship:
@@ -8,12 +9,16 @@ class Spaceship:
         self.width = width
         self.height = height
         self.speed = speed
+        self.max_shots = 5
         self.image = pygame.image.load('./assets/img/spaceship_image.png')
         self.image = pygame.transform.scale(self.image,
                                             (self.width, self.height)
                                             )
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect(center=(self.x, self.y))
+
+        self.is_immortal = False  # Player is not immortal by default
+        self.immortal_time = 0  # To track immortality duration
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -28,6 +33,11 @@ class Spaceship:
 
         self.rect.x = self.x
         self.rect.y = self.y
+
+    def update(self):
+        """Update the player's status (e.g., immortality)"""
+        if self.is_immortal and time.time() > self.immortal_time:
+            self.is_immortal = False  # End immortality after 5 seconds
 
 
 class Laser:
