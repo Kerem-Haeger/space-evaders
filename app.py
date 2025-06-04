@@ -27,7 +27,6 @@ ship = Spaceship(SHIP_WIDTH, SHIP_HEIGHT, SHIP_SPEED)
 asteroids = []
 lasers = []
 pickups = []
-# player_shots = max_shots
 laser_fired = False
 score = 0
 
