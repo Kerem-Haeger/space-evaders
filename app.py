@@ -1,6 +1,5 @@
 import pygame
 import random
-# import time
 
 # Initialize Pygame
 pygame.init()
@@ -26,7 +25,7 @@ for _ in range(100):  # Create 100 stars
 
 # Game settings
 SHIP_WIDTH = 50
-SHIP_HEIGHT = 60
+SHIP_HEIGHT = 50
 SHIP_SPEED = 4  # How fast the spaceship moves (in pixels per frame)
 
 ship = pygame.image.load('./assets/img/spaceship_image.png')
@@ -70,11 +69,28 @@ class Asteroid:
         """Draw the asteroid on the screen (as a rotated image)"""
         screen.blit(self.image, self.rect)
 
-    def check_collision(self, player_rect):
-        """Check if the asteroid collides with the player's spaceship"""
-        if self.rect.colliderect(player_rect):
-            return True  # Collision detected
-        return False
+    def check_collision(self, rect):
+        """Check if the asteroid collides with a rectangle (ship or laser)"""
+        return self.rect.colliderect(rect)
+
+
+class Laser:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 5
+        self.height = 20
+        self.speed = 10
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def move(self):
+        """Move laser upwards"""
+        self.y -= self.speed
+        self.rect.y = self.y
+
+    def draw(self, screen):
+        """Draw laser on screen"""
+        pygame.draw.rect(screen, (255, 0, 0), self.rect)
 
 
 def move_player(player_x, player_y, SHIP_SPEED):
@@ -97,16 +113,37 @@ def move_player(player_x, player_y, SHIP_SPEED):
     return player_x, player_y, True
 
 
+max_shots = 5
+player_shots = max_shots
+lasers = []
+
 # Game loop
 running = True
 asteroids = []
 player_health = 100
+laser_fired = False
 
 while running:
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        # Handle key press (SPACEBAR) to fire laser, only once per press
+        if event.type == pygame.KEYDOWN:
+            if (
+                event.key == pygame.K_SPACE
+                and player_shots > 0
+                and not laser_fired
+            ):
+                laser = Laser(player_x + SHIP_WIDTH // 2 - 2, player_y)
+                lasers.append(laser)  # Add laser to the list
+                player_shots -= 1  # Decrease shots available
+                laser_fired = True
+
+    # Reset the laser fired flag when the spacebar is released
+    if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+        laser_fired = False
 
     # Fill the screen with the base background color
     screen.fill(PURPLE)
@@ -130,7 +167,7 @@ while running:
         asteroids.append(new_asteroid)
 
     # Move and draw the asteroids
-    for asteroid in asteroids:
+    for asteroid in asteroids[:]:
         asteroid.move()
         asteroid.draw(screen)
 
@@ -141,12 +178,33 @@ while running:
             if player_health <= 0:
                 running = False  # End the game if health reaches 0
 
+        # Check for laser-asteroid collision
+        for laser in lasers[:]:
+            if asteroid.check_collision(laser.rect):
+                asteroids.remove(asteroid)  # Remove asteroid on collision
+                lasers.remove(laser)  # Remove laser on collision
+                break
+
+    # Move and draw the lasers
+    for laser in lasers[:]:
+        laser.move()
+        laser.draw(screen)
+
+        # Remove lasers that go off-screen
+        if laser.y < 0:
+            lasers.remove(laser)
+
     screen.blit(ship, (player_x, player_y))
 
     # Display the health
     font = pygame.font.SysFont("Arial", 20)
     health_text = font.render(f"Health: {player_health}", True, WHITE)
     screen.blit(health_text, (10, 10))
+
+    # Display the remaining shots
+    font = pygame.font.SysFont("Arial", 20)
+    shots_text = font.render(f"Shots: {player_shots}", True, WHITE)
+    screen.blit(shots_text, (SCREEN_WIDTH - 100, 10))
 
     # Update the screen
     pygame.display.flip()
