@@ -30,6 +30,7 @@ pickups = []
 player_health = 100
 # player_shots = max_shots
 laser_fired = False
+score = 0
 
 # Star background setup
 star_positions = []
@@ -97,6 +98,11 @@ while running:
         asteroid.move()
         asteroid.draw(screen)
 
+        # Check if asteroid goes off the bottom of the screen
+        if asteroid.y > SCREEN_HEIGHT:
+            asteroids.remove(asteroid)  # Remove the asteroid
+            score += 10  # Increase score by 10
+
         if asteroid.check_collision(ship.rect):
             player_health -= 50  # Deduct health on collision
             asteroids.remove(asteroid)  # Remove the asteroid after collision
@@ -131,12 +137,16 @@ while running:
     screen.blit(ship.image, (ship.x, ship.y))
 
     # Display the health and shots remaining
-    font = pygame.font.SysFont("Arial", 20)
+    font = pygame.font.SysFont("Arial", 15)
     health_text = font.render(f"Health: {player_health}", True, WHITE)
     screen.blit(health_text, (10, 10))
 
     shots_text = font.render(f"Shots: {ship.max_shots}", True, WHITE)
     screen.blit(shots_text, (SCREEN_WIDTH - 100, 10))
+
+    # Display the score
+    score_text = font.render(f"Score: {score}", True, WHITE) 
+    screen.blit(score_text, (SCREEN_WIDTH // 2 - 50, 10))
 
     # Update the display
     pygame.display.flip()
