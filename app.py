@@ -13,6 +13,7 @@ ASTEROID_SPEED = 5
 ASTEROID_SPAWN_RATE = 25  # Lower value = more frequent asteroid spawn
 SHIP_SPEED = 5
 MAX_ASTEROIDS = 5
+LASER_SPEED = 7  # Speed at which the laser moves
 
 # Colors
 WHITE = (255, 255, 255)
@@ -26,8 +27,9 @@ pygame.display.set_caption("Spaceship Evader")
 # Load spaceship image
 ship_width = 50
 ship_height = 60
-ship = pygame.Surface((ship_width, ship_height))
-ship.fill(WHITE)
+ship = pygame.image.load('./assets/img/spaceship_image.png')
+ship = pygame.transform.scale(ship, (ship_width, ship_height))
+ship = ship.convert_alpha()
 
 # Asteroid settings
 asteroid_width = 40
@@ -44,6 +46,23 @@ start_time = time.time()
 
 # Font for displaying text
 font = pygame.font.SysFont("Arial", 20)
+
+
+# Laser Class
+class Laser:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 5
+        self.height = 15
+        self.color = WHITE
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def move(self):
+        self.rect.y -= LASER_SPEED
+
+    def draw(self):
+        pygame.draw.rect(screen, self.color, self.rect)
 
 
 # Function to draw the player's spaceship
@@ -74,7 +93,17 @@ def check_collision(ship_rect, asteroids):
     return False
 
 
+# Function to detect laser collisions with asteroids
+def check_laser_collision(laser, asteroids):
+    for asteroid, _ in asteroids:
+        if laser.rect.colliderect(asteroid):
+            asteroids.remove((asteroid, _))  # Remove asteroid if hit
+            return True
+    return False
+
+
 # Main game loop
+lasers = []  # List to store all lasers
 while running:
     screen.fill(BLACK)
     elapsed_time = time.time() - start_time
@@ -95,6 +124,11 @@ while running:
     if keys[pygame.K_RIGHT] and player_x < SCREEN_WIDTH - ship_width:
         player_x += SHIP_SPEED
 
+    # Shooting mechanism
+    if keys[pygame.K_SPACE]:
+        laser = Laser(player_x + ship_width // 2 - 2, player_y)
+        lasers.append(laser)
+
     # Update asteroid positions and spawn new asteroids
     for asteroid, speed in asteroids:
         asteroid.y += speed
@@ -110,7 +144,15 @@ while running:
                       ) == 1 and len(asteroids) < MAX_ASTEROIDS:
         generate_asteroid()
 
-    # Check for collisions
+    # Move lasers and check for collisions
+    for laser in lasers[:]:
+        laser.move()
+        if check_laser_collision(laser, asteroids):
+            lasers.remove(laser)  # Remove laser when it hits an asteroid
+        elif laser.rect.y < 0:  # Remove laser if it goes off the screen
+            lasers.remove(laser)
+
+    # Check for collisions with the ship
     ship_rect = pygame.Rect(player_x, player_y, ship_width, ship_height)
     if check_collision(ship_rect, asteroids):
         player_health -= 50
@@ -123,6 +165,10 @@ while running:
 
     # Draw the spaceship
     draw_ship(player_x, player_y)
+
+    # Draw lasers
+    for laser in lasers:
+        laser.draw()
 
     # Draw asteroids
     for asteroid, _ in asteroids:
