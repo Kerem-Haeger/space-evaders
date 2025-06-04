@@ -145,8 +145,8 @@ while running:
     screen.blit(shots_text, (SCREEN_WIDTH - 100, 10))
 
     # Display the score
-    score_text = font.render(f"Score: {score}", True, WHITE) 
-    screen.blit(score_text, (SCREEN_WIDTH // 2 - 50, 10))
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (SCREEN_WIDTH // 2 - 40, 10))
 
     # Update the display
     pygame.display.flip()
